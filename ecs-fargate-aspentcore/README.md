@@ -48,7 +48,10 @@ sudo add-apt-repository \
    stable"
 # Install Docker Engine
 sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose
+# Allow Docker to run without sudo
+sudo groupadd docker
+sudo gpasswd -a $USER docker
 ```
 * [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
 ```bash
@@ -67,8 +70,65 @@ ecs-cli --version
 
 # Creating the Application
 
-To begin, follow the aws sample steps for an AWS ECS Fargate .NET Core application.
+To begin, follow the aws sample steps for an AWS ECS Fargate .NET Core application. The repository for this sample app are maintained [here](). Follow the instructions there for a complete explanation -- or follow the below condensed version to get started quickly.
 
+## Run the Application locally
+
+Clone the repository, set as active directory
+```
+git clone https://github.com/aws-samples/amazon-ecs-fargate-aspnetcore.git
+cd amazon-ecs-fargate-aspnetcore/mymvcweb
+```
+Create ASP.NET core mvc application
+```bash
+mkdir mymvcweb
+cd mymvcweb
+dotnet new mvc
+dotnet restore
+dotnet build
+dotnet publish -c "Release"
+```
+
+Build and run these containers on local
+```bash
+#Rename Dockerfile to supported filename
+mv Docker-compose.yml docker-compose.yml
+#Build and run
+sudo docker-compose build
+sudo docker-compose up
+```
+
+Verify the application is running locally by confirming a non-error response from
+```bash
+curl localhost:80
+```
+## Push to ECS
+
+Edit the file `reverseproxy/nginx.conf` and change the value of `server mymvcweb:5000` to `server 127.0.0.1:5000`. Equivalently, run the below command in the `reverseproxy` directory.
+```bash
+sed -i 's/mymvcweb:5000/127.0.0.1:5000/g' nginx.conf
+```
+
+If not done already, AWS CLI credentials will need to be configured by running `aws configure` before proceeding. _Note the remaining commands are hard-coded for the region `us-west-2`, adjust as needed_. For ease of use, set the your AWS account number as an environmental variable.
+```bash
+export AWS_ACCOUNT_NUMBER=
+```
+
+Next, follow the AWS instructions published here, starting at the heading *Push container images to ECR*, or for a faster-less explained path, follow below.
+```bash
+# Log into AWS ECR and Docker
+aws ecr get-login-password --region us-west-2 | sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com
+# Tag the local container image (for mymvcweb) with the remote ECR repository
+sudo docker tag amazon-ecs-fargate-aspnetcore_mymvcweb:latest $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/mymvcweb:latest 
+# Push the 'mymvcweb' image to the remote 'mymvcweb' repository
+sudo docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/mymvcweb:latest 
+# Tag the local container image (for reverseproxy) with the remote ECR repository
+sudo docker tag amazon-ecs-fargate-aspnetcore_reverseproxy:latest $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/reverseproxy:latest
+# Push the 'reverseproxy' image to the remote 'mymvcweb' repository
+sudo docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/reverseproxy:latest
+```
+
+For this section, follow the screenshots for [Create ECS Fargate Cluster](https://github.com/aws-samples/amazon-ecs-fargate-aspnetcore#create-ecs-fargate-cluster).
 # Add Monitoring
 
 Once the application has been verified to be properly running it is time to add in some monitoring.
