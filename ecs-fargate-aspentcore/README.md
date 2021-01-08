@@ -135,15 +135,96 @@ Once the application has been verified to be properly running it is time to add 
 
 ### Smart Agent
 
-By installing the Smart Agent, metrics can be shipped to the Infrastructure Monitor. Follow the recommended Smart Agent [deployment instructions for fargate](https://github.com/signalfx/signalfx-agent/tree/master/deployments/fargate).
+By installing the Smart Agent, metrics can be shipped to the Infrastructure Monitor. The full example of a recommended Smart Agent [deployment in fargate is here](https://github.com/signalfx/signalfx-agent/tree/master/deployments/fargate).
+
+To add the agent to an existing cluster, find the task definition which you would like to add monitoring and create a new revision. At the bottom of the page select 'Configure via JSON' and find the list of `containerDefinition` and add the following element, filling in the applicable values for `MY_ACCESS_TOKEN`, `SFX_INGEST_URL`, `SFX_API_URL`. To be safe, use a tool like [jsonlint](https://jsonlint.com) to verify the syntax.
+```json
+{
+  "entryPoint": [
+      "bash",
+      "-c"
+  ],
+  "portMappings": [],
+  "command": [
+      "curl --fail $CONFIG_URL > /etc/signalfx/agent.yaml && exec /bin/signalfx-agent"
+  ],
+  "environment": [
+      {
+          "name": "ACCESS_TOKEN",
+          "value": "MY_ACCESS_TOKEN"
+      },
+      {
+          "name": "INGEST_URL",
+          "value": "SFX_INGEST_URL"
+      },
+      {
+          "name": "API_URL",
+          "value": "SFX_API_URL"
+      },
+      {
+          "name": "CONFIG_URL",
+          "value": "https://raw.githubusercontent.com/signalfx/signalfx-agent/v5.7.1/deployments/fargate/agent.yaml"
+      }
+  ],
+  "dockerLabels": {
+      "app": "signalfx-agent"
+  },
+  "name": "signalfx-agent",
+  "image": "quay.io/signalfx/signalfx-agent:5.7.1"
+}
+```
+If you are unsure about the config values to use...
+* `ACCESS_TOKEN` -- In Splunk Infrastructure Monitor navigate to _Settings_ in the top right (your user profile), then _Organization Settings_ >> _Access Tokens_.
+* `SFX_INGEST_URL` -- `https://ingest.YOUR_SIGNALFX_REALM.signalfx.com`
+* `SFX_API_URL` -- `https://api.YOUR_SIGNALFX_REALM.signalfx.com`
+* `YOUR_SIGNALFX_REALM` -- for the above two points, note the realm that your organization is in. The easiest way to find out is by looking at the url; for example, `https://app.us1.signalfx.com` would be `us1.`
+
+Save the updated Task Definition, then in the already running cluster update the service to the latest revision.
 
 ### Viewing metrics in the Infrastructure Monitor
 
-Since the Smart Agent wasn't technically installed on a _host_, the metrics will all be collected for the _containers_. Navigate to Infrastructure >> Docker Containers.
+Since the Smart Agent wasn't technically installed on a _host_, the metrics will all be collected for the _containers_. Navigate to Infrastructure >> Docker Containers. The containers from the cluster will show up here momentarily. Additionally, there will be an out of the box ECS dashboard found at _Dashboards_ >> _ECS_ >> _ECS (SignalFx) Cluster_ (among some others in the group).
 
 ## APM
 
 ### Instrumentation
+
+For instrumenting a .NET Core application the below steps are based off of the complete documentation found [here](https://github.com/signalfx/signalfx-dotnet-tracing). For this example, the only thing that needs to be added is a block to the Dockerfile which will add the SignalFx auto-instrumentation to the image. Add the below snippet to the Dockerfile for both mymvcweb and reverseproxy.
+```
+# Custom lines Adding the SignalFx Auto-Instrumentation to the image:
+
+# First install the package. This example downloads the latest version
+# alternatively download a specific version or use a local copy.
+ARG TRACER_VERSION=0.1.3
+ADD https://github.com/signalfx/signalfx-dotnet-tracing/releases/download/v${TRACER_VERSION}/signalfx-dotnet-tracing_${TRACER_VERSION}_amd64.deb /signalfx-package/signalfx-dotnet-tracing.deb
+RUN dpkg -i /signalfx-package/signalfx-dotnet-tracing.deb
+RUN rm -rf /signalfx-package
+
+# Prepare the log directory (useful for local tests).
+RUN mkdir -p /var/log/signalfx/dotnet && \
+    chmod a+rwx /var/log/signalfx/dotnet
+
+# Set the required environment variables. In the case of Azure Functions more
+# can be set either here or on the application settings. 
+ENV CORECLR_ENABLE_PROFILING=1 \
+    CORECLR_PROFILER='{B4C89B0F-9908-4F73-9F59-0D77C5A06874}' \
+    CORECLR_PROFILER_PATH=/opt/signalfx-dotnet-tracing/SignalFx.Tracing.ClrProfiler.Native.so \
+    SIGNALFX_INTEGRATIONS=/opt/signalfx-dotnet-tracing/integrations.json \
+    SIGNALFX_DOTNET_TRACER_HOME=/opt/signalfx-dotnet-tracing
+# End of SignalFx customization.
+```
+
+After the changes, rebuild the container images and push them to ECR.
+```bash
+sudo docker-compose build
+sudo docker tag amazon-ecs-fargate-aspnetcore_mymvcweb:latest $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/mymvcweb:latest
+sudo docker tag amazon-ecs-fargate-aspnetcore_reverseproxy:latest $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/reverseproxy:latest
+sudo docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/mymvcweb:latest
+sudo docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/reverseproxy:latest
+```
+
+Last, the AWS resources need to be updated. First, update the Task Definition by selecting aspnetcorefargatetask and then _Create New Revision_, for both mymvcweb and reverseproxy click into the container and click _Update_. Second, navigate to the cluster and select the Services >> aspnetcorefargatesvc and click _Update_. Under the task definition, update to the latest revision of the task definition.
+
 
 ### Viewing traces in the APM
 
@@ -157,4 +238,12 @@ Check the logs of the container, if within the logs you see something like
 ```
 nginx: [emerg] host not found in upstream "mymvcweb:5000" in /etc/nginx/nginx.conf:10
 ```
-The step to replace `mymvcweb` with `127.0.0.1` may have been missed. Verify that before building and pushing the container images that the file `reverseproxy/nginx.conf` has the aforementioned substitution made. If not, make the change, rebuild and repush container images and then update the service definition to use the new revision.
+The step to replace `mymvcweb` with `127.0.0.1` may have been missed. Verify that before building and pushing the container images that the file `reverseproxy/nginx.conf` has the aforementioned substitution made. If not, make the change, rebuild and repush container images and then update the service definition to use the new revision. Running the below from the `reverseproxy` directory will quickly do that...
+```bash
+sed -i 's/mymvcweb:5000/127.0.0.1:5000/g' nginx.conf
+cd ..
+sudo docker-compose build
+sudo docker tag amazon-ecs-fargate-aspnetcore_reverseproxy:latest $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/reverseproxy:latest
+sudo docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/reverseproxy:latest
+```
+Last, update the task definition to use the new version of reverseproxy.
