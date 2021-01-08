@@ -74,12 +74,13 @@ To begin, follow the aws sample steps for an AWS ECS Fargate .NET Core applicati
 
 ## Run the Application locally
 
-Clone the repository, set as active directory
-```
-git clone https://github.com/aws-samples/amazon-ecs-fargate-aspnetcore.git
-cd amazon-ecs-fargate-aspnetcore/mymvcweb
+Create a new folder
+
+```bash
+mkdir amazon-ecs-fargate-aspnetcore; cd amazon-ecs-fargate-aspnetcore
 ```
 Create ASP.NET core mvc application
+
 ```bash
 mkdir mymvcweb
 cd mymvcweb
@@ -88,7 +89,31 @@ dotnet restore
 dotnet build
 dotnet publish -c "Release"
 ```
+Create a new file named `Dockerfile` with the below contents
+```
+FROM mcr.microsoft.com/dotnet/core/sdk:3.0 AS build-env
 
+WORKDIR /app
+
+# Copy csproj and restore as distinct layers
+COPY *.csproj ./
+RUN dotnet restore
+
+# Copy everything else and build
+COPY . ./
+RUN dotnet publish -c Release -o out
+
+
+
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.0
+WORKDIR /app
+COPY --from=build-env /app/out .
+ENTRYPOINT ["dotnet", "mymvcweb.dll"]
+
+ENV ASPNETCORE_URLS http://+:5000
+EXPOSE 5000
+```
 Build and run these containers on local
 ```bash
 #Rename Dockerfile to supported filename
@@ -247,3 +272,5 @@ sudo docker tag amazon-ecs-fargate-aspnetcore_reverseproxy:latest $AWS_ACCOUNT_N
 sudo docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/reverseproxy:latest
 ```
 Last, update the task definition to use the new version of reverseproxy.
+
+### Traces aren't showing up

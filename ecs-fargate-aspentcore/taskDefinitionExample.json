@@ -1,0 +1,198 @@
+{
+    "ipcMode": null,
+    "executionRoleArn": "arn:aws:iam::259869531956:role/ecsTaskExecutionRole",
+    "containerDefinitions": [
+        {
+            "entryPoint": [
+                "bash",
+                "-c"
+            ],
+            "portMappings": [],
+            "command": [
+                "curl --fail $CONFIG_URL > /etc/signalfx/agent.yaml && exec /bin/signalfx-agent"
+            ],
+            "environment": [
+                {
+                    "name": "ACCESS_TOKEN",
+                    "value": "dcjGwMVEEACmkoVPJ6lgzg"
+                },
+                {
+                    "name": "INGEST_URL",
+                    "value": "https://ingest.us1.signalfx.com"
+                },
+                {
+                    "name": "API_URL",
+                    "value": "https://api.us1.signalfx.com"
+                },
+                {
+                    "name": "CONFIG_URL",
+                    "value": "https://raw.githubusercontent.com/signalfx/signalfx-agent/v5.7.1/deployments/fargate/agent.yaml"
+                },
+                {
+                    "name": "TRACE_ENDPOINT_URL",
+                    "value": "https://ingest.us1.signalfx.com/v2/trace"
+                }
+            ],
+            "dockerLabels": {
+                "app": "signalfx-agent"
+            },
+            "name": "signalfx-agent",
+            "image": "quay.io/signalfx/signalfx-agent:5.7.1"
+        },
+        {
+            "dnsSearchDomains": null,
+            "environmentFiles": null,
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "secretOptions": null,
+                "options": {
+                    "awslogs-group": "/ecs/aspnetcorefargatetask",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "entryPoint": null,
+            "portMappings": [
+                {
+                    "hostPort": 5000,
+                    "protocol": "tcp",
+                    "containerPort": 5000
+                }
+            ],
+            "command": null,
+            "linuxParameters": null,
+            "cpu": 0,
+            "environment": [
+                {
+                    "name": "SIGNALFX_ENDPOINT_URL",
+                    "value": "http://0.0.0.0:9080/v1/trace"
+                },
+                {
+                    "name": "SIGNALFX_TRACING_ENABLED",
+                    "value": "true"
+                },
+                {
+                    "name": "SIGNALFX_SERVICE_NAME",
+                    "value": "mymvcweb"
+                },
+                {
+                    "name": "SIGNALFX_ENV",
+                    "value": "challdotnet"
+                }
+            ],
+            "resourceRequirements": null,
+            "ulimits": null,
+            "dnsServers": null,
+            "mountPoints": [],
+            "workingDirectory": null,
+            "secrets": null,
+            "dockerSecurityOptions": null,
+            "memory": null,
+            "memoryReservation": 1024,
+            "volumesFrom": [],
+            "stopTimeout": null,
+            "image": "259869531956.dkr.ecr.us-west-2.amazonaws.com/mymvcweb:latest",
+            "startTimeout": null,
+            "firelensConfiguration": null,
+            "dependsOn": null,
+            "disableNetworking": null,
+            "interactive": null,
+            "healthCheck": null,
+            "essential": true,
+            "links": null,
+            "hostname": null,
+            "extraHosts": null,
+            "pseudoTerminal": null,
+            "user": null,
+            "readonlyRootFilesystem": null,
+            "dockerLabels": null,
+            "systemControls": null,
+            "privileged": null,
+            "name": "mymvcweb"
+        },
+        {
+            "dnsSearchDomains": null,
+            "environmentFiles": null,
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "secretOptions": null,
+                "options": {
+                    "awslogs-group": "/ecs/aspnetcorefargatetask",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "entryPoint": null,
+            "portMappings": [
+                {
+                    "hostPort": 80,
+                    "protocol": "tcp",
+                    "containerPort": 80
+                }
+            ],
+            "command": null,
+            "linuxParameters": null,
+            "cpu": 0,
+            "environment": [
+                {
+                    "name": "SIGNALFX_ENDPOINT_URL",
+                    "value": "http://0.0.0.0:9080/v1/trace"
+                },
+                {
+                    "name": "SIGNALFX_TRACING_ENABLED",
+                    "value": "true"
+                },
+                {
+                    "name": "SIGNALFX_SERVICE_NAME",
+                    "value": "reverseproxy"
+                },
+                {
+                    "name":"LOG_LEVEL",
+                    "value":"debug"
+                }
+            ],
+            "resourceRequirements": null,
+            "ulimits": null,
+            "dnsServers": null,
+            "mountPoints": [],
+            "workingDirectory": null,
+            "secrets": null,
+            "dockerSecurityOptions": null,
+            "memory": null,
+            "memoryReservation": 1024,
+            "volumesFrom": [],
+            "stopTimeout": null,
+            "image": "259869531956.dkr.ecr.us-west-2.amazonaws.com/reverseproxy:latest",
+            "startTimeout": null,
+            "firelensConfiguration": null,
+            "dependsOn": null,
+            "disableNetworking": null,
+            "interactive": null,
+            "healthCheck": null,
+            "essential": true,
+            "links": null,
+            "hostname": null,
+            "extraHosts": null,
+            "pseudoTerminal": null,
+            "user": null,
+            "readonlyRootFilesystem": null,
+            "dockerLabels": null,
+            "systemControls": null,
+            "privileged": null,
+            "name": "reverseproxy"
+        }
+    ],
+    "memory": "2048",
+    "taskRoleArn": "arn:aws:iam::259869531956:role/ecsTaskExecutionRole",
+    "family": "aspnetcorefargatetask",
+    "pidMode": null,
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "networkMode": "awsvpc",
+    "cpu": "1024",
+    "inferenceAccelerators": [],
+    "proxyConfiguration": null,
+    "volumes": [],
+    "tags": []
+}
