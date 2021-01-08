@@ -148,3 +148,13 @@ Since the Smart Agent wasn't technically installed on a _host_, the metrics will
 ### Viewing traces in the APM
 
 Let's further verify that the instrumentation and agent installation were successful by creating some requets on the application and ensuring that they are viewable in the APM.
+
+# Troubleshooting
+
+### Containers are cycling up and down and I can't load the app in the browser
+
+Check the logs of the container, if within the logs you see something like
+```
+nginx: [emerg] host not found in upstream "mymvcweb:5000" in /etc/nginx/nginx.conf:10
+```
+The step to replace `mymvcweb` with `127.0.0.1` may have been missed. Verify that before building and pushing the container images that the file `reverseproxy/nginx.conf` has the aforementioned substitution made. If not, make the change, rebuild and repush container images and then update the service definition to use the new revision.
