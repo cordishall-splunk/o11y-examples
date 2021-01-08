@@ -15,7 +15,7 @@ RUN dotnet publish -c Release -o out
 # First install the package. This example downloads the latest version
 # alternatively download a specific version or use a local copy.
 ARG TRACER_VERSION=0.1.2
-ADD https://github.com/signalfx/signalfx-dotnet-tracing/releases/download/v${TRACER_VERSION}/signa>
+ADD https://github.com/signalfx/signalfx-dotnet-tracing/releases/download/v${TRACER_VERSION}/signalfx-dotnet-tracing_${TRACER_VERSION}_amd64.deb /signalfx-package/signalfx-dotnet-tracing.deb
 RUN dpkg -i /signalfx-package/signalfx-dotnet-tracing.deb
 RUN rm -rf /signalfx-package
 
