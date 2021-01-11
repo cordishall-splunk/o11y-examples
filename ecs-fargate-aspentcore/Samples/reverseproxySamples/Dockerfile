@@ -20,5 +20,5 @@ ENV CORECLR_ENABLE_PROFILING=1 \
     CORECLR_PROFILER='{B4C89B0F-9908-4F73-9F59-0D77C5A06874}' \
     CORECLR_PROFILER_PATH=/opt/signalfx-dotnet-tracing/SignalFx.Tracing.ClrProfiler.Native.so \
     SIGNALFX_INTEGRATIONS=/opt/signalfx-dotnet-tracing/integrations.json \
-    SIGNALFX_DOTNET_TRACER_HOME=/opt/signalfx-dotnet-tracing \
+    SIGNALFX_DOTNET_TRACER_HOME=/opt/signalfx-dotnet-tracing
 # End of SignalFx customization.
