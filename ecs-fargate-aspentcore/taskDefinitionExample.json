@@ -31,6 +31,10 @@
                 {
                     "name": "TRACE_ENDPOINT_URL",
                     "value": "https://ingest.us1.signalfx.com/v2/trace"
+                },
+                {
+                    "name": "LOG_LEVEL",
+                    "value": "debug"
                 }
             ],
             "dockerLabels": {
