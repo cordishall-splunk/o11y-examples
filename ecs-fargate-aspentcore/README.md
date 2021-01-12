@@ -18,10 +18,8 @@ There are a number of requirements that shoul be met before getting started:
 
 * [.NET Core 3.0](https://dotnet.microsoft.com/download)
   ```bash
-  # Add the Microsoft package signing key to tour list of trusted keys and add the package repository
-  wget https://packages.microsoft.com/config/ubuntu/20.10/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+  wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
   sudo dpkg -i packages-microsoft-prod.deb
-  # Install the SDK
   sudo apt-get update; \
   sudo apt-get install -y apt-transport-https && \
   sudo apt-get update && \
@@ -33,7 +31,7 @@ There are a number of requirements that shoul be met before getting started:
 sudo apt-get remove docker docker-engine docker.io containerd runc
 # Setup the Repository
 sudo apt-get update
-sudo apt-get install \
+sudo apt-get install -y\
     apt-transport-https \
     ca-certificates \
     curl \
@@ -48,14 +46,14 @@ sudo add-apt-repository \
    stable"
 # Install Docker Engine
 sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose
 # Allow Docker to run without sudo
 sudo groupadd docker
 sudo gpasswd -a $USER docker
 ```
 * [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
 ```bash
-sudo apt install unzip
+sudo apt install -y unzip
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
 sudo ./aws/install
@@ -103,8 +101,6 @@ RUN dotnet restore
 COPY . ./
 RUN dotnet publish -c Release -o out
 
-
-
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.0
 WORKDIR /app
@@ -114,11 +110,70 @@ ENTRYPOINT ["dotnet", "mymvcweb.dll"]
 ENV ASPNETCORE_URLS http://+:5000
 EXPOSE 5000
 ```
-Build and run these containers on local
+Return to the amazon-ecs-fargate-aspnetcore directory, create a new directory `reverseproxy`.
 ```bash
-#Rename Dockerfile to supported filename
-mv Docker-compose.yml docker-compose.yml
-#Build and run
+cd ..; mkdir reverseproxy; cd reverseproxy
+```
+Add a new file `ngninx.conf` ([working example]()). _Note_, `server mymvcweb:5000;` will only work for testing locally, in order to run in Fargate, change the value of `mymvcweb` to `127.0.0.1` (this will be done later on).
+```
+worker_processes 1;
+
+events { worker_connections 1024; }
+
+http {
+
+    sendfile on;
+
+    upstream web-site {
+        server mymvcweb:5000;
+    }
+
+    server {
+        listen 80;
+        server_name $hostname;
+        location / {
+            proxy_pass         http://web-site;
+            proxy_redirect     off;
+            proxy_http_version 1.1;
+            proxy_cache_bypass $http_upgrade;
+            proxy_set_header   Upgrade $http_upgrade;
+            proxy_set_header   Connection keep-alive;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $scheme;
+            proxy_set_header   X-Forwarded-Host $server_name;
+        }
+    }
+```
+Add another new file `Dockerfile` [working example]().
+```
+FROM nginx
+COPY nginx.conf /etc/nginx/nginx.conf
+```
+Finally create a file in the amazon-ecs-fargate-aspnetcore directory, `docker-compose.yaml` (case sensitive).
+```
+version: '2.1'
+services:
+  mymvcweb:
+    build:
+      context: ./mymvcweb
+      dockerfile: Dockerfile
+    expose:
+      - "5000"
+    restart: always
+  reverseproxy:
+    build:
+      context: ./reverseproxy
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: always
+    links :
+      - mymvcweb
+```
+Build and run these containers locally
+```bash
 sudo docker-compose build
 sudo docker-compose up
 ```
@@ -134,7 +189,7 @@ Edit the file `reverseproxy/nginx.conf` and change the value of `server mymvcweb
 sed -i 's/mymvcweb:5000/127.0.0.1:5000/g' nginx.conf
 ```
 
-If not done already, AWS CLI credentials will need to be configured by running `aws configure` before proceeding. _Note the remaining commands are hard-coded for the region `us-west-2`, adjust as needed_. For ease of use, set the your AWS account number as an environmental variable.
+If not done already, AWS CLI credentials will need to be configured by running `aws configure` before proceeding _Note the remaining commands are hard-coded for the region `us-west-2`, adjust as needed_. For ease of use, set the your AWS account number as an environmental variable.
 ```bash
 export AWS_ACCOUNT_NUMBER=
 ```
@@ -144,11 +199,11 @@ Next, follow the AWS instructions published here, starting at the heading *Push 
 # Log into AWS ECR and Docker
 aws ecr get-login-password --region us-west-2 | sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com
 # Tag the local container image (for mymvcweb) with the remote ECR repository
-sudo docker tag amazon-ecs-fargate-aspnetcore_mymvcweb:latest $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/mymvcweb:latest 
+sudo docker tag webap_mymvcweb:latest $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/mymvcweb:latest 
 # Push the 'mymvcweb' image to the remote 'mymvcweb' repository
 sudo docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/mymvcweb:latest 
 # Tag the local container image (for reverseproxy) with the remote ECR repository
-sudo docker tag amazon-ecs-fargate-aspnetcore_reverseproxy:latest $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/reverseproxy:latest
+sudo docker tag awsnetcore_reverseproxy:latest $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/reverseproxy:latest
 # Push the 'reverseproxy' image to the remote 'mymvcweb' repository
 sudo docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/reverseproxy:latest
 ```
@@ -174,22 +229,30 @@ To add the agent to an existing cluster, find the task definition which you woul
       "curl --fail $CONFIG_URL > /etc/signalfx/agent.yaml && exec /bin/signalfx-agent"
   ],
   "environment": [
-      {
-          "name": "ACCESS_TOKEN",
-          "value": "MY_ACCESS_TOKEN"
-      },
-      {
-          "name": "INGEST_URL",
-          "value": "SFX_INGEST_URL"
-      },
-      {
-          "name": "API_URL",
-          "value": "SFX_API_URL"
-      },
-      {
-          "name": "CONFIG_URL",
-          "value": "https://raw.githubusercontent.com/signalfx/signalfx-agent/v5.7.1/deployments/fargate/agent.yaml"
-      }
+    {
+      "name": "ACCESS_TOKEN",
+      "value": "INSERT_YOUR_ACCESS_TOKEN"
+    },
+    {
+      "name": "API_URL",
+      "value": "https://api.YOUR_REALM.signalfx.com"
+    },
+    {
+      "name": "CONFIG_URL",
+      "value": "https://raw.githubusercontent.com/signalfx/signalfx-agent/v5.7.1/deployments/fargate/agent.yaml"
+    },
+    {
+      "name": "INGEST_URL",
+      "value": "https://ingest.YOUR_REALM.signalfx.com"
+    },
+    {
+      "name": "LOG_LEVEL",
+      "value": "debug"
+    },
+    {
+      "name": "TRACE_ENDPOINT_URL",
+      "value": "https://ingest.YOUR_REALM.signalfx.com/v2/trace"
+    }
   ],
   "dockerLabels": {
       "app": "signalfx-agent"
@@ -198,12 +261,6 @@ To add the agent to an existing cluster, find the task definition which you woul
   "image": "quay.io/signalfx/signalfx-agent:5.7.1"
 }
 ```
-If you are unsure about the config values to use...
-* `ACCESS_TOKEN` -- In Splunk Infrastructure Monitor navigate to _Settings_ in the top right (your user profile), then _Organization Settings_ >> _Access Tokens_.
-* `SFX_INGEST_URL` -- `https://ingest.YOUR_SIGNALFX_REALM.signalfx.com`
-* `SFX_API_URL` -- `https://api.YOUR_SIGNALFX_REALM.signalfx.com`
-* `YOUR_SIGNALFX_REALM` -- for the above two points, note the realm that your organization is in. The easiest way to find out is by looking at the url; for example, `https://app.us1.signalfx.com` would be `us1.`
-
 Save the updated Task Definition, then in the already running cluster update the service to the latest revision.
 
 ### Viewing metrics in the Infrastructure Monitor
@@ -214,15 +271,15 @@ Since the Smart Agent wasn't technically installed on a _host_, the metrics will
 
 ### Instrumentation
 
-For instrumenting a .NET Core application the below steps are based off of the complete documentation found [here](https://github.com/signalfx/signalfx-dotnet-tracing). For this example, the only thing that needs to be added is a block to the Dockerfile which will add the SignalFx auto-instrumentation to the image. Add the below snippet to the Dockerfile for both mymvcweb and reverseproxy.
+For instrumenting a .NET Core application the below steps are based off of the complete documentation found [here](https://github.com/signalfx/signalfx-dotnet-tracing). For the steps above, note that the section of Dockerfile which adds auto-instrumentation to the mymvcweb app is below. Note the environmental variables specified here including the commented options which can be uncommented to aid in debugging.
 ```
 # Custom lines Adding the SignalFx Auto-Instrumentation to the image:
 
 # First install the package. This example downloads the latest version
 # alternatively download a specific version or use a local copy.
 ARG TRACER_VERSION=0.1.3
-ADD https://github.com/signalfx/signalfx-dotnet-tracing/releases/download/v${TRACER_VERSION}/signalfx-dotnet-tracing_${TRACER_VERSION}_amd64.deb /signalfx-package/signalfx-dotnet-tracing.deb
-RUN dpkg -i /signalfx-package/signalfx-dotnet-tracing.deb
+ADD https://github.com/signalfx/signalfx-dotnet-tracing/releases/download/v${TRACER_VERSION}/signalfx-dotnet-tracing_${TRACER_VERSION}_amd64.deb .
+RUN dpkg -i signalfx-dotnet-tracing_${TRACER_VERSION}_amd64.deb
 RUN rm -rf /signalfx-package
 
 # Prepare the log directory (useful for local tests).
@@ -230,16 +287,24 @@ RUN mkdir -p /var/log/signalfx/dotnet && \
     chmod a+rwx /var/log/signalfx/dotnet
 
 # Set the required environment variables. In the case of Azure Functions more
-# can be set either here or on the application settings. 
+# can be set either here or on the application settings.
 ENV CORECLR_ENABLE_PROFILING=1 \
     CORECLR_PROFILER='{B4C89B0F-9908-4F73-9F59-0D77C5A06874}' \
     CORECLR_PROFILER_PATH=/opt/signalfx-dotnet-tracing/SignalFx.Tracing.ClrProfiler.Native.so \
     SIGNALFX_INTEGRATIONS=/opt/signalfx-dotnet-tracing/integrations.json \
-    SIGNALFX_DOTNET_TRACER_HOME=/opt/signalfx-dotnet-tracing
+    SIGNALFX_DOTNET_TRACER_HOME=/opt/signalfx-dotnet-tracing \
+#    SIGNALFX_TRACE_DEBUG=true \
+#    SIGNALFX_TRACE_DOMAIN_NEUTRAL_INSTRUMENTATION=true \
+#    SIGNALFX_STDOUT_LOG_ENABLED=true \
+    SIGNALFX_ENDPOINT_URL=http://127.0.0.1:9080/v1/trace
+
+#link SFX tracing log directory to stdout
+# RUN ln -s /dev/stdout /var/log/signalfx/dotnet
+
 # End of SignalFx customization.
 ```
 
-After the changes, rebuild the container images and push them to ECR.
+If debugging, run the below after making any changes to the local files. This will rebuild the container images and push them to ECR.
 ```bash
 sudo docker-compose build
 sudo docker tag amazon-ecs-fargate-aspnetcore_mymvcweb:latest $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/mymvcweb:latest
@@ -247,15 +312,18 @@ sudo docker tag amazon-ecs-fargate-aspnetcore_reverseproxy:latest $AWS_ACCOUNT_N
 sudo docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/mymvcweb:latest
 sudo docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/reverseproxy:latest
 ```
-
-Last, the AWS resources need to be updated. First, update the Task Definition by selecting aspnetcorefargatetask and then _Create New Revision_, for both mymvcweb and reverseproxy click into the container and click _Update_. Second, navigate to the cluster and select the Services >> aspnetcorefargatesvc and click _Update_. Under the task definition, update to the latest revision of the task definition.
+To update the Service in your Cluster, select the checkbox next to your service name select _Update_. Select the checkbox for 'force new deployment' on the first page and then leave everything else as default.
 
 
 ### Viewing traces in the APM
 
-Let's further verify that the instrumentation and agent installation were successful by creating some requets on the application and ensuring that they are viewable in the APM.
+Let's further verify that the instrumentation and agent installation were successful by creating some requets on the application and ensuring that they are viewable in the APM. Without generating any of your own traffic, the Load Balancer health check will be generating periodic traffic that is visible in the APM Service Dashboard. To generate further traffic, note the DNS name of your Application Load Balancer and create further traffic with your browser, `curl` or any other means.
+
+
 
 # Troubleshooting
+
+There are many moving parts to account for, refer to the example files in this repo for a sample of a working configuration.
 
 ### Containers are cycling up and down and I can't load the app in the browser
 
@@ -273,4 +341,22 @@ sudo docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.us-west-2.amazonaws.com/reverseprox
 ```
 Last, update the task definition to use the new version of reverseproxy.
 
-### Traces aren't showing up
+## Version Error on docker-compose build
+
+A couple outputs from docker-compose build,
+```
+/usr/share/dotnet/sdk/3.0.103/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.TargetFrameworkInference.targets(127,5): error NETSDK1045: The current .NET SDK does not support targeting .NET Core 5.0.  Either target .NET Core 3.0 or lower, or use a version of the .NET SDK that supports .NET Core 5.0. [/app/mymvcweb.csproj]
+```
+and
+```
+ERROR: Service 'mymvcweb' failed to build: The command '/bin/sh -c dotnet restore' returned a non-zero code: 1
+```
+Retarget the application by changing the version number in `mymvcweb/mymvcweb.csproj` to 3.0
+
+## `Failed to determine the https port for redirect.`
+
+Remove the line to use `HttpsRedirectionMiddleware` from `mymvcweb/Startup.cs
+
+## Testing Locally
+
+As the configuration elements between Laptop, VM and Fargate have their own particular nuance, it can be challenging to test this example locally. If testing locally, take note of the log file for dotnet instrumentation, `/var/log/signalfx/dotnet/`, and inspect there when testing locally. Use `sudo docker exec -it YOUR_CONTAINER_NAME bash` to enter an interactive terminal for mymvcweb.
