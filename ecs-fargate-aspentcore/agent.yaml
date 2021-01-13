@@ -15,8 +15,10 @@ observers:
     # Enable the ecs observer to discover other ECS containers running on the
     # same ECS task.
   - type: ecs
+    metadataEndpoint: {"#from": "env:ECS_CONTAINER_METADATA_URI"}
     labelsToDimensions: &labelMap
       com.amazonaws.ecs.container-name: container_spec_name
+  - type: docker
 
 monitors:
   - type: cpu
