@@ -41,7 +41,7 @@ monitors:
      #SPAN_TAG_KEY: "SPAN_TAG_VALUE"
 
   - type: ecs-metadata
-    metadataEndpoint: ${ECS_CONTAINER_METADATA_URI}/metadata
+    metadataEndpoint: ${ECS_CONTAINER_METADATA_URI}
     excludedImages:
       - signalfx-agent
     labelsToDimensions:
