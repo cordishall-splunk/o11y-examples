@@ -179,12 +179,14 @@ In this part the application will be instrumented so the traces can be viewed in
 
 ### Instrumentation
 
-Look at the docs for instrumenting a python application and consider how the python service is being ran. This amounts to simply making an adjustment to the dockerfile: installing the tracer and updating the run command.
+Look at the docs for instrumenting a python application and consider how the python service is being ran. This amounts to simply making an adjustment to the dockerfile: installing the tracer and updating the run command. Consider what is shown on the _APM Instrumentation_ for Python auto-instrumentation and update the dockerfile accordingly.
 
 ```
-DOCKERFILE_ADDITION
+...
+RUN pip3 install splunk-opentelemetry[all]
+RUN splunk-py-trace-bootstrap
+
+...
+
+CMD ["splunk-py-trace" ...
 ```
-
-### OpenTelemetry Trace Configuration
-
-Just like metrics, the trace pipeline also must be configured to both receive and send traces.
