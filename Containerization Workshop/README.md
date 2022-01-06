@@ -76,7 +76,7 @@ CMD [ "python3", "client.py"]
 
 ```
 
-What's happening in these `dockefiles`?
+What's happening in these `dockerfiles`?
 1. Starting with a base python image
 1. Creating a working directory, `app` to work out of
 1. Copy from the non-container directory, `requirements.txt` to a file in the container `requirements.txt`
@@ -126,7 +126,7 @@ Validate success by seeing `200`s in the server container's logs.
 
 ### Run the containers with docker-compose
 
-Docker compose allows for multi-container applications to be run with a single command. That way, there isn't a need to specify using the host's network or to run disparate commands. Instead, all of the configurations will be defined in one yaml file. In the root directory of the project, create a new file `docker-compose.yaml` with the below contents. For ease of use, the request url in `client.py` should be changed to `http://server:5000/echo`.
+Docker compose allows for multi-container applications to be run with a single command. That way, there isn't a need to specify using the host's network or to run disparate commands. Instead, all of the configurations will be defined in one yaml file. In the root directory of the project, create a new file `docker-compose.yaml` with the below contents. For use with `docker-compose` the client request url must be changed in `client.py` to `http://server:5000/echo`.
 
 ```
 version: '3.8'
@@ -140,9 +140,34 @@ services:
     build: ./client
 ```
 
+Re-build the containers and run with a single command:
+
+```
+docker compose build
+docker compose up
+```
+
 ## Part 3: Infrastructure Monitoring
 
-In this part, an OpenTelemetry Collector will be deployed to collect infrastructure metrics about the running containers.
+In this part, an OpenTelemetry Collector will be deployed to collect infrastructure metrics about the running containers. Add another service to the `docker-compose.yaml` file. Create env variables or replace `${SPLUNK_ACCESS_TOKEN}` and `${SPLUNK_REALM}` with appropriate values.
+
+```
+splunk-otel-collector:
+    image: quay.io/signalfx/splunk-otel-collector:latest
+    environment:
+      - SPLUNK_ACCESS_TOKEN=${SPLUNK_ACCESS_TOKEN}
+      - SPLUNK_REALM=${SPLUNK_REALM}
+    ports:
+      - "13133:13133"
+      - "14250:14250"
+      - "14268:14268"
+      - "4317:4317"
+      - "6060:6060"
+      - "8888:8888"
+      - "9080:9080"
+      - "9411:9411"
+      - "9943:9943"
+```
 
 ### OpenTelemetry Metric Configuration
 

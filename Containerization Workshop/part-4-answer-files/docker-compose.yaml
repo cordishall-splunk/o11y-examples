@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  server:
+    build: ./server
+    ports: 
+    - 5000:5000
+    environment:
+      - OTEL_SERVICE_NAME=server
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://splunk-otel-collector:4317
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=containerization-workshop
+  client:
+    build: ./client
+    environment:
+      - OTEL_SERVICE_NAME=client
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://splunk-otel-collector:4317
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=containerization-workshop
+
+
+  splunk-otel-collector:
+    image: quay.io/signalfx/splunk-otel-collector:latest
+    environment:
+      - SPLUNK_ACCESS_TOKEN=${SPLUNK_ACCESS_TOKEN}
+      - SPLUNK_REALM=${SPLUNK_REALM}
+    ports:
+      - "13133:13133"
+      - "14250:14250"
+      - "14268:14268"
+      - "4317:4317"
+      - "6060:6060"
+      - "8888:8888"
+      - "9080:9080"
+      - "9411:9411"
+      - "9943:9943"
+
+
+# to set custom config:
+    # command: ["--config=/etc/collector.yaml"]
+    # volumes:
+    #  - ./collector.yaml:/etc/collector.yaml
+    # environment:
+    # - SPLUNK_ACCESS_TOKEN=Gih4r6ewapRyz7bmDrdUPQ
+    # - SPLUNK_REALM=us0
+    # - config c:\splunk_config\gateway_config.yaml
