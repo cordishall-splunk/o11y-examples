@@ -171,7 +171,7 @@ splunk-otel-collector:
 
 ### OpenTelemetry Metric Configuration
 
-The OpenTelemetr Collector can be configured in _many_ ways. In this case, add `docker-container-stats` as a receiver to collect docker metrics, and then a `signalfx` exporter to send the collected metrics to Splunk IM. Last define a metric pipeline to connect the docker metrics to the signalfx exporter.
+The OpenTelemetry Collector can be configured in _many_ ways, this is awesome! However, it's a double edged sword as things can quickly get complicated. One benefit to using the Splunk distribution of the OpenTelemetry Collector is that it is preconfigured to work out-of-the-box with Splunk Observability Cloud. In this case, simply following the example documentation creates an immediately usable configuration.
 
 ## Part 4: Application Monitoring
 
@@ -179,7 +179,7 @@ In this part the application will be instrumented so the traces can be viewed in
 
 ### Instrumentation
 
-Look at the docs for instrumenting a python application and consider how the python service is being ran. This amounts to simply making an adjustment to the dockerfile: installing the tracer and updating the run command. Consider what is shown on the _APM Instrumentation_ for Python auto-instrumentation and update the dockerfile accordingly.
+Look at the docs for instrumenting a python application and consider how the python service is being ran (see Data Setup > APM Instrumentation > Python). This amounts to simply making an adjustment to the dockerfile: installing the tracer and updating the run command. Consider what is shown on the _APM Instrumentation_ for Python auto-instrumentation and update the dockerfile accordingly.
 
 ```
 ...
