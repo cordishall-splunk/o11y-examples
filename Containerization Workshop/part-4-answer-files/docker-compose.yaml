@@ -8,13 +8,13 @@ services:
     environment:
       - OTEL_SERVICE_NAME=server
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://splunk-otel-collector:4317
-      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=containerization-workshop
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=containerization-workshop-your-inits
   client:
     build: ./client
     environment:
       - OTEL_SERVICE_NAME=client
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://splunk-otel-collector:4317
-      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=containerization-workshop
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=containerization-workshop-your-inits
 
 
   splunk-otel-collector:
