@@ -4,7 +4,7 @@ from random import random, seed
 import json
 
 seed(1)
-url = 'http://server:5000/echo'
+url = 'http://127.0.0.1:5000/echo'
 
 def pythonrequests():
     payload = {'key': 'value'}
