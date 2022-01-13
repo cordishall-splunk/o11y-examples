@@ -10,7 +10,18 @@ In the workshop, we will create two services in python (1) a client which is mak
 
 ## Part 1: Starting from Scratch
 
-Clone this repository.
+Clone this repository, ensure python 3 is installed and install the needed packages. Verify python 3 is installed with,
+
+```
+python3 --version
+```
+
+Install `requests` and `flask` with,
+
+```
+pip3 install requests flask
+```
+
 
 ### Build a foundation
 
@@ -30,7 +41,7 @@ If done correctly, the client should now be constantly logging status code `200`
 
 ## Part 2: Containerize it
 
-In this part, each service will be built into a container image and re-deployed as such.
+In this part, each service will be built into a container image and re-deployed as such. Start Docker Desktop if not already running.
 
 ### Build Container Images
 
