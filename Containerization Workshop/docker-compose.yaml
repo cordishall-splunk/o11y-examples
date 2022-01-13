@@ -8,20 +8,20 @@ services:
     environment:
       - OTEL_SERVICE_NAME=server
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://splunk-otel-collector:4317
-      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=containerization-workshop
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=containerization-workshop-your-inits
   client:
     build: ./client
     environment:
       - OTEL_SERVICE_NAME=client
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://splunk-otel-collector:4317
-      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=containerization-workshop
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=containerization-workshop-your-inits
 
 
   splunk-otel-collector:
     image: quay.io/signalfx/splunk-otel-collector:latest
     environment:
-      - SPLUNK_ACCESS_TOKEN=Gih4r6ewapRyz7bmDrdUPQ
-      - SPLUNK_REALM=us0
+      - SPLUNK_ACCESS_TOKEN=access_token
+      - SPLUNK_REALM=realm
     ports:
       - "13133:13133"
       - "14250:14250"
