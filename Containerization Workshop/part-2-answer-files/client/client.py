@@ -5,8 +5,8 @@ import json
 
 seed(1)
 # for running with docker-compose, change
-url = 'http://server:5000/echo'
-# url = 'http://0.0.0.0:5000/echo'
+# url = 'http://server:5000/echo'
+url = 'http://0.0.0.0:5000/echo'
 
 def pythonrequests():
     payload = {'key': 'value'}
