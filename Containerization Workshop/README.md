@@ -5,8 +5,9 @@ This workshop is designed to explore how to build and run simple containers and 
 In the workshop, we will create two services in python (1) a client which is making http requests to (2) a server. Next, the services will both be containerized, instrumented and monitored with Splunk IM & APM.
 
 *_Prerequisites_*
-* Docker Installed ([Mac](https://docs.docker.com/desktop/mac/install/) or [Windows](https://docs.docker.com/desktop/windows/install/))
-* [Python 3 Installed](https://www.python.org/downloads/)
+* Docker Installed ([Mac](https://docs.docker.com/desktop/mac/install/) or [Windows](https://docs.docker.com/desktop/windows/install/) or [Ubuntu](https://docs.docker.com/engine/install/ubuntu/))
+* [Python 3 Installed](https://www.python.org/downloads/), python 3 should be installed by default on a fresh Ubuntu VM.
+* pip3 Installed with `sudo apt install python3-pip`
 
 ## Part 1: Starting from Scratch
 
