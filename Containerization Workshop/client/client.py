@@ -9,7 +9,7 @@ url = 'http://127.0.0.1:5000/echo'
 
 def pythonrequests():
     payload = {'fruit': 'value'}
-    a = random.randint(1,4)
+    a = randint(1,4)
     if a == 2:
         requestURL = 'http://127.0.0.1:5000/echo'
         payload = {'fruit': 'banana'}
