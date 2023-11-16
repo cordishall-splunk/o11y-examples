@@ -44,7 +44,7 @@ In another terminal, run the client
 python3 client.py
 ```
 
-If done correctly, the client should now be constantly logging status code `200`'s. While this is a rather boring example, we can see the increase in network i/o metrics in real time! Stop both services with cntrl + c.
+If done correctly, the client should now be constantly logging status codes. While this is a rather boring example, we can see the increase in network i/o metrics in real time! Stop both services with cntrl + c.
 
 ### Instrumentation
 
@@ -53,6 +53,7 @@ Time to add instrumentation to these python services. Go to Data Management > Ad
 * Environmental variables can be set by running `./env.sh`, edit the file to your specific Environment name first!
 * Install requirements with `pip install -r requirements.txt`
 * Feel free to use and modify `run-client.sh` and `run-server.sh` to preserver your runtime commands and any instrumentation.
+* If you get a `command not found error` when runnning `splunk-py-trace-bootstrap`, a host restart may be required
 
 You should now be able to see received and exported spans on the OpenTelemetry Collector dashboard and a service map in APM. APM can take ~3 minutes to update the service map, so be patient and think about where else we might be able to validate our instrumentation is working, both locally and in the o11y suite.
 
