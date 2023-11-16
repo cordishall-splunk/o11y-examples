@@ -11,22 +11,28 @@ In the workshop, we will create two services in python (1) a client which is mak
 
 ## Part 1: Starting from Scratch
 
-Clone this repository, ensure python 3 is installed and install the needed packages. Verify python 3 is installed with,
+First, let's make sure we can monitor everything happening on this host by installing the Splunk OpenTelemetry Collector. In the O11y suite, go to Data Management > Add Integration > Deploy the Splunk OpenTelemetry Collector and follow the wizard.
 
+After installing, the host metrics will be found under Infrastructure Monitoring and the collector itself can be monitored under Dashboards > OpenTelemetry Collector.
+
+Clone this repository with
 ```
-python3 --version
+git clone https://github.com/cordishall-splunk/o11y-examples.git
 ```
 
-Install `requests` and `flask` with,
+Navigate to this workshop's directory with
+```
+cd o11y-examples/Containerization\ Workshop
+```
 
+Install python libraries `requests` and `flask` with the below command. These will be used to send and receive http requests in the workshop.
 ```
 pip3 install requests flask
 ```
 
-
 ### Build a foundation
 
-To start with create the python client and server. Use the examples in this directory, or create your own. In one terminal, run the server
+To start with create the python client and server. Use the examples in their respectively named directories, or create your own. In one terminal, run the server
 
 ```
 python3 -m flask run;
@@ -38,7 +44,13 @@ In another terminal, run the client
 python3 client.py
 ```
 
-If done correctly, the client should now be constantly logging status code `200`'s.
+If done correctly, the client should now be constantly logging status code `200`'s. While this is a rather boring example, we can see the increase in network i/o metrics in real time! Stop both services with cntrl + c.
+
+### Instrumentation
+
+Time to add instrumentation to these python services. Go to Data Management > Add Integration > Monitor applications > Python (OpenTelemetry) and follow the wizard to instrument both services. Follow the wizard and any linked documentation as needed.
+
+You should now be able to see received and exported spans on the OpenTelemetry Collector dashboard and a service map in APM. APM can take ~3 minutes to update the service map.
 
 ## Part 2: Containerize it
 

@@ -1,6 +1,6 @@
 import requests
 from time import sleep
-from random import random, seed
+from random import randint, random, seed
 import json
 
 seed(1)
@@ -8,6 +8,11 @@ url = 'http://127.0.0.1:5000/echo'
 
 def pythonrequests():
     payload = {'key': 'value'}
+    a = randint(1,2)
+    if a == 2:
+        requestURL = 'http://127.0.0.1:5000/echo'
+    else:
+        requestURL = 'http://127.0.0.1:5000/lookHere'
     try:
         r=requests.post(url, params=payload)
         log_dict = {'httpMETHOD': "post",
