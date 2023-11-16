@@ -58,7 +58,7 @@ You should now be able to see received and exported spans on the OpenTelemetry C
 
 ### Troubleshooting
 
-Looking at APM, where do you see errors? Where are they coming from?
+Looking at APM, where do you see errors? Where are they coming from? How can we use the guided troubleshooting in APM to better understand?
 
 ## Part 2: Containerize it
 

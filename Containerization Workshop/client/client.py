@@ -9,7 +9,7 @@ url = 'http://127.0.0.1:5000/echo'
 
 def pythonrequests():
     payload = {'fruit': 'value'}
-    a = randint(1,4)
+    a = random.randint(1,4)
     if a == 2:
         requestURL = 'http://127.0.0.1:5000/echo'
         payload = {'fruit': 'banana'}
@@ -53,7 +53,7 @@ def pythonrequests():
     
 while True:
     pythonrequests()
-    seed(1)
+#    seed(1)
     y = random()
     #print('Sleeping: ', round(y,2))
     sleep(round(y,2))
