@@ -4,6 +4,10 @@ FROM python:3.8-slim-buster
 
 WORKDIR /app
 
+ENV OTEL_SERVICE_NAME='SERVICENAMEHERE'
+ENV OTEL_EXPORTER_OTLP_ENDPOINT='http://localhost:431'
+ENV OTEL_RESOURCE_ATTRIBUTES='deployment.environment=ENVIRONMENTNAMEHERE,service.version=1'
+
 COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 RUN pip3 install splunk-opentelemetry[all]

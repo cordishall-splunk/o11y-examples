@@ -25,22 +25,21 @@ Navigate to this workshop's directory with
 cd o11y-examples/Containerization\ Workshop
 ```
 
-Install python libraries `requests` and `flask` with the below command. These will be used to send and receive http requests in the workshop.
-```
-pip3 install requests flask
-```
-
 ### Build a foundation
 
-To start with create the python client and server. Use the examples in their respectively named directories, or create your own. In one terminal, run the server
+To start with create the python client and server. Use the examples in their respectively named directories, or create your own. In one terminal, install the listed dependencies and run the server
 
 ```
+pip install -r requirements.txt
+export PATH=$PATH:/home/ubuntu/.local/bin
 python3 -m flask run
 ```
 
 In another terminal, run the client
 
 ```
+pip install -r requirements.txt
+export PATH=$PATH:/home/ubuntu/.local/bin
 python3 client.py
 ```
 
