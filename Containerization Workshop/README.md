@@ -35,7 +35,7 @@ pip3 install requests flask
 To start with create the python client and server. Use the examples in their respectively named directories, or create your own. In one terminal, run the server
 
 ```
-python3 -m flask run;
+python3 -m flask run
 ```
 
 In another terminal, run the client
@@ -48,9 +48,17 @@ If done correctly, the client should now be constantly logging status code `200`
 
 ### Instrumentation
 
-Time to add instrumentation to these python services. Go to Data Management > Add Integration > Monitor applications > Python (OpenTelemetry) and follow the wizard to instrument both services. Follow the wizard and any linked documentation as needed.
+Time to add instrumentation to these python services. Go to Data Management > Add Integration > Monitor applications > Python (OpenTelemetry) and follow the wizard to instrument both services. Follow the wizard and any linked documentation as needed. Some notes,
 
-You should now be able to see received and exported spans on the OpenTelemetry Collector dashboard and a service map in APM. APM can take ~3 minutes to update the service map.
+* Environmental variables can be set by running `./env.sh`, edit the file to your specific Environment name first!
+* Install requirements with `pip install -r requirements.txt`
+* Feel free to use and modify `run-client.sh` and `run-server.sh` to preserver your runtime commands and any instrumentation.
+
+You should now be able to see received and exported spans on the OpenTelemetry Collector dashboard and a service map in APM. APM can take ~3 minutes to update the service map, so be patient and think about where else we might be able to validate our instrumentation is working, both locally and in the o11y suite.
+
+### Troubleshooting
+
+Looking at APM, where do you see errors? Where are they coming from?
 
 ## Part 2: Containerize it
 
