@@ -62,55 +62,18 @@ Looking at APM, where do you see errors? Where are they coming from? How can we 
 
 ## Part 2: Containerize it
 
-In this part, each service will be built into a container image and re-deployed as such. Start Docker Desktop if not already running.
+In this part, each service will be built into a container image and re-deployed. Note, installing docker with the recommended ubuntu steps linked above requires prefixing any `docker` command with `sudo`.
 
 ### Build Container Images
 
 First, a _container image_ needs to be created. Container images can be created by selecting a base image and then defining the startup conditions -- the idea is to install the bare minimum needed for the service to run.
 
-Create a new file `dockerfile` in the server directory with the below contents
-
-```
-# syntax=docker/dockerfile:1
-
-FROM python:3.8-slim-buster
-
-WORKDIR /app
-
-COPY requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
-
-COPY . .
-
-CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
-
-# client dockerfile
-
-```
-
-Create another `dockerfile` in the client directory with the contents
-
-```
-# syntax=docker/dockerfile:1
-
-FROM python:3.8-slim-buster
-
-WORKDIR /app
-
-COPY requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
-
-COPY . .
-
-CMD [ "python3", "client.py"]
-
-# client dockerfile
-
-```
+There are already dockerfiles in the client and server directories to use. Edit the ALL CAPS fields to your specific values.
 
 What's happening in these `dockerfiles`?
 1. Starting with a base python image
 1. Creating a working directory, `app` to work out of
+1. Setting environmental variables
 1. Copy from the non-container directory, `requirements.txt` to a file in the container `requirements.txt`
 1. Install all of the needed python packages
 1. Get all of the files in the non-container directory and put them  in the container.
@@ -155,6 +118,12 @@ Validate success by seeing `200`s in the server container's logs.
 ```
 172.17.0.1 - - [16/Dec/2021 16:47:00] "POST /echo?key=value HTTP/1.1" 200 -
 ```
+### Monitor the Containers
+
+Follow the [Docker Containers](https://docs.splunk.com/observability/en/gdi/monitors-hosts/docker.html) doc to add a new receiver to our locally running collector and the metrics pipeline.
+
+When viewing the docker dashboard, container names can be found by running `docker ps`.
+
 
 ### Run the containers with docker-compose
 
