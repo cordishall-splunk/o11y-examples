@@ -27,6 +27,10 @@ cd o11y-examples/Containerization\ Workshop
 
 ### Build a foundation
 
+In this section we will be running a simple client server application on an EC2 instance. The host will be monitored with OpenTelemetry Collector and each python service will be instrumented to send traces to the collector locally before all data is sent to Splunk's Observability Cloud.
+
+![Diagram1](content/Diagram1.png)
+
 To start with create the python client and server. Use the examples in their respectively named directories, or create your own. In one terminal, install the listed dependencies and run the server
 
 ```
@@ -47,7 +51,9 @@ If done correctly, the client should now be constantly logging status codes. Whi
 
 ### Instrumentation
 
-Time to add instrumentation to these python services. Go to Data Management > Add Integration > Monitor applications > Python (OpenTelemetry) and follow the wizard to instrument both services. Follow the wizard and any linked documentation as needed. Some notes,
+Time to add instrumentation to these python services (highlighted in below diagram). Go to Data Management > Add Integration > Monitor applications > Python (OpenTelemetry) and follow the wizard to instrument both services. Follow the wizard and any linked documentation as needed. Some notes,
+
+![Diagram2](content/Diagram2.png)
 
 * Environmental variables can be set by running `./env.sh`, edit the file to your specific Environment name first!
 * Install requirements with `pip install -r requirements.txt`
@@ -63,6 +69,8 @@ Looking at APM, where do you see errors? Where are they coming from? How can we 
 ## Part 2: Containerize it
 
 In this part, each service will be built into a container image and re-deployed. Note, installing docker with the recommended ubuntu steps linked above requires prefixing any `docker` command with `sudo`.
+
+![Diagram3](content/Diagram3.png)
 
 ### Build Container Images
 
@@ -120,7 +128,7 @@ Validate success by seeing `200`s in the server container's logs.
 ```
 ### Monitor the Containers
 
-Follow the [Docker Containers](https://docs.splunk.com/observability/en/gdi/monitors-hosts/docker.html) doc to add a new receiver to our locally running collector and the metrics pipeline.
+Follow the [Docker Containers](https://docs.splunk.com/observability/en/gdi/monitors-hosts/docker.html) doc to add a new receiver to our locally running collector and the metrics pipeline. Our final data flow diagram looks like,
 
 When viewing the docker dashboard, container names can be found by running `docker ps`.
 
