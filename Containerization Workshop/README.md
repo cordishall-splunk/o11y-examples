@@ -9,6 +9,27 @@ In the workshop, we will create two services in python (1) a client which is mak
 * [Python 3 Installed](https://www.python.org/downloads/), python 3 should be installed by default on a fresh Ubuntu VM.
 * pip3 Installed with `sudo apt install python3-pip`
 
+*_Mulitpass_*
+Running locally is an easy option. After [installing multipass](https://multipass.run/docs/how-to-guides#heading--install-multipass-), launch a new instance with `multipass launch`, noting the output host name. Then install the requirements by pasting the below commands, which are just an expansion of the above bullets.
+```
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+#pip
+sudo apt install python3-pip
+```
+
 ## Part 1: Starting from Scratch
 
 First, let's make sure we can monitor everything happening on this host by installing the Splunk OpenTelemetry Collector. In the O11y suite, go to Data Management > Add Integration > Deploy the Splunk OpenTelemetry Collector and follow the wizard.
