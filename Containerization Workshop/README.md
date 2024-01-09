@@ -10,7 +10,7 @@ In the workshop, we will create two services in python (1) a client which is mak
 * pip3 Installed with `sudo apt install python3-pip`
 
 *_Mulitpass_*
-Running locally is an easy option. After [installing multipass](https://multipass.run/docs/how-to-guides#heading--install-multipass-), launch a new instance with `multipass launch`, noting the output host name. Then install the requirements by pasting the below commands, which are just an expansion of the above bullets.
+Running locally is an easy option. After [installing multipass](https://multipass.run/docs/how-to-guides#heading--install-multipass-), launch a new instance with `multipass launch`, noting the output host name, open a shell session on the host with `multipass shell YourHostNameHere`. Then install the requirements by pasting the below commands, which are just an expansion of the above bullets.
 ```
 # Add Docker's official GPG key:
 sudo apt-get update
