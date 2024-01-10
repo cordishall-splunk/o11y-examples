@@ -37,7 +37,7 @@ First, let's make sure we can monitor everything happening on this host by insta
 
 After installing, the host metrics will be found under Infrastructure Monitoring and the collector itself can be monitored under Dashboards > OpenTelemetry Collector.
 
-Clone this repository with
+Clone this repository with, (for errors cloning the repo, try running `git config --global http.sslVerify false`)
 ```
 git clone https://github.com/cordishall-splunk/o11y-examples.git
 ```
